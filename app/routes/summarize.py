@@ -1,6 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, Query, HTTPException
 from app.services.s3_upload import upload_file_to_s3
 from io import BytesIO
+from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException
+from app.schemas.summarize import SummarizeRequest
+from app.services.openai_summary import fetch_transcript_text, summarize_text
 
 router = APIRouter()
 
@@ -36,3 +40,16 @@ def get_transcript(transcript_url: str = Query(..., description="URL to the AWS 
         return {"transcript": transcript}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch transcript: {str(e)}")
+    
+
+
+
+
+@router.post("/summarize")
+def summarize(request: SummarizeRequest):
+    try:
+        transcript = fetch_transcript_text(request.transcript_url)
+        summary = summarize_text(transcript)
+        return {"summary": summary}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to summarize transcript: {str(e)}")
