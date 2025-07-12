@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
 from app.schemas.summarize import SummarizeRequest
 from app.services.openai_summary import fetch_transcript_text, summarize_text
+from app.services.openai_summary import summarize_text
+from fastapi import APIRouter, Body
 
 router = APIRouter()
 
@@ -45,11 +47,12 @@ def get_transcript(transcript_url: str = Query(..., description="URL to the AWS 
 
 
 
+    
 @router.post("/summarize")
-def summarize(request: SummarizeRequest):
+def summarize(transcript_url: str = Body(..., embed=True)):
     try:
-        transcript = fetch_transcript_text(request.transcript_url)
-        summary = summarize_text(transcript)
+        transcript_text = fetch_transcript_text(transcript_url)
+        summary = summarize_text(transcript_text)
         return {"summary": summary}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to summarize transcript: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to summarize: {str(e)}")
